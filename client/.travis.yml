@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t lastaw/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true lastaw/react-test  npm run test
+
+after_success:
+  - docker build -t lastaw/multi-client ./client
+  - docker build -t lastaw/multi-nginx ./nginx
+  - docker build -t lastaw/multi-server ./server
+  - docker build -t lastaw/multi-worker ./worker
+  # Log in the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Push images to dockerhub
+  - docker push lastaw/multi-client
+  - docker push lastaw/multi-nginx
+  - docker push lastaw/multi-server
+  - docker push lastaw/multi-worker
